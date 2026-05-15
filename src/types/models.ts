@@ -155,12 +155,58 @@ export interface SupplierResponse {
 }
 
 // ===== Inventory =====
+export interface InventoryItem {
+  id?: number
+  product_id?: number | null
+  name?: string
+  quantity?: number
+  image?: string | null
+  category_id?: number | null
+  quantity_tag?: string | null
+}
+
 export interface AddInventoryRequest {
   hub_id: number
   product_id: number
   supplier_id?: number | null
   quantity: number
   description?: string | null
+}
+
+// ===== Delivery Locations =====
+export interface DeliveryLocation {
+  id: number
+  name: string
+}
+
+// ===== Orders =====
+export interface OrderItem {
+  product_name?: string | null
+  image?: string | null
+  mrp?: number | null
+  sp?: number | null
+  quantity?: number | null
+  quantity_tag?: string | null
+}
+
+export interface Order {
+  id?: number | null
+  date?: string | null
+  status?: number | null
+  coupon_amount?: number | null
+  coupon_code?: string | null
+  otp?: number | null
+  location_id?: number | null
+  user_name?: string | null
+  co_name?: string | null
+  address?: string | null
+  phone?: string | null
+  items?: OrderItem[]
+}
+
+export interface OrderListResponse {
+  total_pages?: number | null
+  items?: Order[]
 }
 
 // ===== Session =====

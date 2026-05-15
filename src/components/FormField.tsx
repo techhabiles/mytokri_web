@@ -63,7 +63,7 @@ export function SelectField({
       >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
+          <option key={String(opt.value)} value={String(opt.value)}>
             {opt.label}
           </option>
         ))}

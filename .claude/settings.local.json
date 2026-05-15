@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(rm /Users/krishankumar/Desktop/krish@mac/ws-react/mytokri_admin/src/pages/delivery/DeliveryPersonHome.tsx \\\\ *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "/Users/krishankumar/Desktop/krish@mac/ws-react/mytokri_admin/src/pages/delivery"

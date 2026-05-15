@@ -5,6 +5,7 @@ import type {
   AddSupplierRequest,
   ApiResponse,
   CategoryResponse,
+  InventoryItem,
   ProductResponse,
   SupplierResponse,
 } from '../types/models'
@@ -40,9 +41,24 @@ export const sharedApi = {
     )
   },
 
+  getInventoryList(hubId: number) {
+    return callApi<InventoryItem[]>(
+      apiClient.get<ApiResponse<InventoryItem[]>>(`shared/inventory_list/${hubId}`),
+    )
+  },
+
   addInventory(body: AddInventoryRequest) {
     return callApi<unknown>(
       apiClient.post<ApiResponse<unknown>>('shared/add_inventory', body),
+    )
+  },
+
+  updateOrderStatus(orderId: number, status: number) {
+    return callApi<unknown>(
+      apiClient.post<ApiResponse<unknown>>('shared/update_order_status', {
+        order_id: orderId,
+        status,
+      }),
     )
   },
 

@@ -91,9 +91,21 @@ const ADMIN_SECTIONS: NavSection[] = [
       { label: 'Add Coupon', icon: PlusSquare, to: '/admin/coupons/add' },
     ],
   },
+  {
+    heading: 'Inventory',
+    items: [
+      { label: 'Inventory List', icon: Boxes, to: '/admin/inventory' },
+    ],
+  },
 ]
 
 const HUB_MANAGER_SECTIONS: NavSection[] = [
+  {
+    heading: 'Orders',
+    items: [
+      { label: 'Order List', icon: ListChecks, to: '/hub-manager/orders' },
+    ],
+  },
   {
     heading: 'Products',
     items: [
@@ -113,12 +125,6 @@ const HUB_MANAGER_SECTIONS: NavSection[] = [
     items: [
       { label: 'Inventory List', icon: Boxes, to: '/hub-manager/inventory' },
       { label: 'Add Inventory', icon: PlusSquare, to: '/hub-manager/inventory/add' },
-    ],
-  },
-  {
-    heading: 'Orders',
-    items: [
-      { label: 'Order List', icon: ListChecks, to: '/hub-manager/orders' },
     ],
   },
 ]

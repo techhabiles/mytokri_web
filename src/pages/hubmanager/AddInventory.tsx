@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+
 import Toolbar from '../../components/Toolbar'
 import { InputField, SelectField, TextareaField } from '../../components/FormField'
 import { sharedApi } from '../../api/sharedApi'
@@ -15,13 +16,15 @@ import type {
 
 export default function AddInventory() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const preset = location.state as { categoryId?: number; productId?: number } | null
   const { run } = useApiHandler()
   const { showSuccess } = useDialog()
   const { session } = useSession()
   const hubId = session?.hubId
 
   const [categories, setCategories] = useState<CategoryResponse[]>([])
-  const [categoryId, setCategoryId] = useState('')
+  const [categoryId, setCategoryId] = useState(preset?.categoryId ? String(preset.categoryId) : '')
   const [products, setProducts] = useState<ProductResponse[]>([])
   const [productId, setProductId] = useState('')
   const [suppliers, setSuppliers] = useState<SupplierResponse[]>([])
@@ -29,6 +32,7 @@ export default function AddInventory() {
   const [quantity, setQuantity] = useState('')
   const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const userChangedCategory = useRef(false)
 
   useEffect(() => {
     ;(async () => {
@@ -49,8 +53,15 @@ export default function AddInventory() {
     }
     ;(async () => {
       const data = await run(() => sharedApi.getProducts(Number(hubId), Number(categoryId)))
-      if (data) setProducts(data)
-      setProductId('')
+      if (!data) return
+      setProducts(data)
+      if (!userChangedCategory.current && preset?.productId != null) {
+        const presetStr = String(preset.productId)
+        const match = data.find((p) => p.id != null && String(p.id) === presetStr)
+        setProductId(match?.id != null ? String(match.id) : '')
+      } else if (userChangedCategory.current) {
+        setProductId('')
+      }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hubId, categoryId])
@@ -104,7 +115,7 @@ export default function AddInventory() {
           <SelectField
             label="Category"
             value={categoryId}
-            onChange={setCategoryId}
+            onChange={(id) => { userChangedCategory.current = true; setCategoryId(id) }}
             options={categories
               .filter((c) => c.id != null)
               .map((c) => ({ value: c.id!, label: c.name }))}

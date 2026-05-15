@@ -113,10 +113,10 @@ export default function ProductList() {
                 </div>
               )}
               <div className="flex-1">
-                <h3 className="font-semibold text-navy">{p.name}</h3>
-                {p.quantity_tag && (
-                  <p className="text-xs text-gray-500">{p.quantity_tag}</p>
-                )}
+                <h3 className="font-semibold text-navy">
+                  {p.name}
+                  {p.quantity_tag && <span className="text-gray-400 font-normal"> ({p.quantity_tag})</span>}
+                </h3>
                 {p.description && (
                   <p className="text-sm text-gray-600 mt-1">{p.description}</p>
                 )}

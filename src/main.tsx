@@ -5,14 +5,17 @@ import './index.css'
 import App from './App'
 import { SessionProvider } from './context/SessionContext'
 import { DialogProvider } from './context/DialogContext'
+import { HubManagerProvider } from './context/HubManagerContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <SessionProvider>
-        <DialogProvider>
-          <App />
-        </DialogProvider>
+        <HubManagerProvider>
+          <DialogProvider>
+            <App />
+          </DialogProvider>
+        </HubManagerProvider>
       </SessionProvider>
     </BrowserRouter>
   </StrictMode>,
