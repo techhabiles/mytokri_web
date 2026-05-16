@@ -47,6 +47,12 @@ function formatDate(raw: string | null | undefined): string {
   return `${dd}-${mm}-${yyyy} ${HH}:${min}`
 }
 
+// Server sends delivery_time as "dd-MM-yyyy HH:mm:ss" — already human-readable, no parsing needed
+function formatDeliveryTime(raw: string | null | undefined): string {
+  if (!raw) return '—'
+  return raw.trim()
+}
+
 function formatOrderId(id: number | null | undefined): string {
   if (id == null) return '—'
   return `MYTKR-${String(id).padStart(7, '0')}`
@@ -163,9 +169,17 @@ function OrderCard({
 
       {/* Date + Address */}
       <div className="flex items-start justify-between gap-2 mt-1.5">
-        <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
-          <Calendar size={11} className="shrink-0" />
-          <span>{formatDate(order.date)}</span>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Calendar size={11} className="shrink-0" />
+            <span>{formatDate(order.date)}</span>
+          </div>
+          {order.status === 5 && order.delivery_time && (
+            <div className="flex items-center gap-1 text-xs text-green-600">
+              <Calendar size={11} className="shrink-0" />
+              <span>Delivered {formatDeliveryTime(order.delivery_time)}</span>
+            </div>
+          )}
         </div>
         {(() => {
           const parts = [order.user_name, order.co_name, order.address, order.phone].filter(Boolean)

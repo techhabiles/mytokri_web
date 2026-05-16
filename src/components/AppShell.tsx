@@ -17,6 +17,7 @@ import {
   PackagePlus,
   PlusSquare,
   Ticket,
+  Bike,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useLogout } from '../hooks/useLogout'
@@ -97,6 +98,13 @@ const ADMIN_SECTIONS: NavSection[] = [
       { label: 'Inventory List', icon: Boxes, to: '/admin/inventory' },
     ],
   },
+  {
+    heading: 'Delivery Persons',
+    items: [
+      { label: 'Delivery Person List', icon: Bike, to: '/admin/delivery-persons' },
+      { label: 'Add Delivery Person', icon: PlusSquare, to: '/admin/delivery-persons/add' },
+    ],
+  },
 ]
 
 const HUB_MANAGER_SECTIONS: NavSection[] = [
@@ -125,6 +133,13 @@ const HUB_MANAGER_SECTIONS: NavSection[] = [
     items: [
       { label: 'Inventory List', icon: Boxes, to: '/hub-manager/inventory' },
       { label: 'Add Inventory', icon: PlusSquare, to: '/hub-manager/inventory/add' },
+    ],
+  },
+  {
+    heading: 'Delivery Persons',
+    items: [
+      { label: 'Delivery Person List', icon: Bike, to: '/admin/delivery-persons' },
+      { label: 'Add Delivery Person', icon: PlusSquare, to: '/admin/delivery-persons/add' },
     ],
   },
 ]

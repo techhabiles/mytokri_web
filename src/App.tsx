@@ -25,6 +25,8 @@ import UploadImage from './pages/admin/UploadImage'
 import CouponList from './pages/admin/CouponList'
 import AddCoupon from './pages/admin/AddCoupon'
 import AdminInventoryList from './pages/admin/InventoryList'
+import AddDeliveryPerson from './pages/admin/AddDeliveryPerson'
+import DeliveryPersonList from './pages/admin/DeliveryPersonList'
 
 import ProductList from './pages/shared/ProductList'
 import AddProduct from './pages/shared/AddProduct'
@@ -73,6 +75,8 @@ export default function App() {
           <Route path="/admin/coupons" element={<ProtectedRoute allowedRoles={[ROLE_ADMIN]}><CouponList /></ProtectedRoute>} />
           <Route path="/admin/coupons/add" element={<ProtectedRoute allowedRoles={[ROLE_ADMIN]}><AddCoupon /></ProtectedRoute>} />
           <Route path="/admin/inventory" element={<ProtectedRoute allowedRoles={[ROLE_ADMIN]}><AdminInventoryList /></ProtectedRoute>} />
+          <Route path="/admin/delivery-persons" element={<ProtectedRoute allowedRoles={ADMIN_OR_HM}><DeliveryPersonList /></ProtectedRoute>} />
+          <Route path="/admin/delivery-persons/add" element={<ProtectedRoute allowedRoles={ADMIN_OR_HM}><AddDeliveryPerson /></ProtectedRoute>} />
 
           {/* Shared (Admin + Hub Manager) */}
           <Route path="/products" element={<ProtectedRoute allowedRoles={ADMIN_OR_HM}><ProductList /></ProtectedRoute>} />

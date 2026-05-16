@@ -154,6 +154,20 @@ export interface SupplierResponse {
   email?: string | null
 }
 
+// ===== Delivery Person =====
+export interface AddDeliveryPersonRequest {
+  name: string
+  phone: string
+  location_ids: number[]
+}
+
+export interface DeliveryPersonResponse {
+  id?: number | null
+  name: string
+  phone: string
+  locations?: number[]
+}
+
 // ===== Inventory =====
 export interface InventoryItem {
   id?: number
@@ -196,6 +210,7 @@ export interface Order {
   coupon_amount?: number | null
   coupon_code?: string | null
   otp?: number | null
+  delivery_time?: string | null
   location_id?: number | null
   user_name?: string | null
   co_name?: string | null

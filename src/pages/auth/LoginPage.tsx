@@ -45,20 +45,6 @@ export default function LoginPage() {
 
         <div className="space-y-4">
           <div>
-            <label className="label">Phone</label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="10-digit phone"
-              className="input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-            />
-            {error && <p className="error-text">{error}</p>}
-          </div>
-
-          <div>
             <label className="label">Select Role</label>
             <div className="space-y-2">
               {ROLES.map((r) => (
@@ -82,6 +68,20 @@ export default function LoginPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="label">Phone</label>
+            <input
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10-digit phone"
+              className="input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+            />
+            {error && <p className="error-text">{error}</p>}
           </div>
 
           <button className="btn-primary w-full" onClick={handleGenerateOtp}>
