@@ -156,6 +156,7 @@ export interface SupplierResponse {
 
 // ===== Delivery Person =====
 export interface AddDeliveryPersonRequest {
+  hub_id: number
   name: string
   phone: string
   location_ids: number[]
@@ -165,7 +166,7 @@ export interface DeliveryPersonResponse {
   id?: number | null
   name: string
   phone: string
-  locations?: number[]
+  locations?: DeliveryLocation[]
 }
 
 // ===== Inventory =====

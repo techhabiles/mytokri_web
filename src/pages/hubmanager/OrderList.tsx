@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Calendar, X, RefreshCw, MapPin, Package, Search } from 'lucide-react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { Calendar, X, RefreshCw, MapPin, Package, Search, CheckSquare, Square, Bike } from 'lucide-react'
 import Toolbar from '../../components/Toolbar'
 import EmptyState from '../../components/EmptyState'
 import { hubManagerApi } from '../../api/hubManagerApi'
@@ -7,7 +7,7 @@ import { sharedApi } from '../../api/sharedApi'
 import { useApiHandler } from '../../hooks/useApiHandler'
 import { useDialog } from '../../context/DialogContext'
 import { useHubManager } from '../../context/HubManagerContext'
-import type { Order, OrderItem } from '../../types/models'
+import type { DeliveryPersonResponse, Order, OrderItem } from '../../types/models'
 
 const PAGE_SIZE = 200
 
@@ -135,21 +135,43 @@ function OrderCard({
   order,
   allowStatusChange,
   onStatusChange,
+  selectionMode,
+  selected,
+  onToggleSelect,
 }: {
   order: Order
   allowStatusChange: boolean
   onStatusChange: (order: Order) => void
+  selectionMode?: boolean
+  selected?: boolean
+  onToggleSelect?: (id: number) => void
 }) {
   const { locationMap } = useHubManager()
   const items = order.items ?? []
   const { totalMrp, totalSp } = calcTotals(items)
   const locationName = order.location_id != null ? locationMap[order.location_id] : undefined
+  const isCreated = order.status === 1
+
+  function handleCardClick() {
+    if (selectionMode && isCreated && onToggleSelect && order.id != null) {
+      onToggleSelect(order.id)
+    }
+  }
 
   return (
-    <div className="card p-4">
+    <div
+      className={`card p-4 ${selectionMode && isCreated ? 'cursor-pointer' : ''} ${selected ? 'ring-2 ring-navy' : ''}`}
+      onClick={handleCardClick}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          {selectionMode && isCreated && (
+            <span className="mt-0.5 shrink-0 text-navy">
+              {selected ? <CheckSquare size={18} /> : <Square size={18} className="text-gray-300" />}
+            </span>
+          )}
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-navy font-mono">
               {formatOrderId(order.id)}
@@ -160,10 +182,11 @@ function OrderCard({
               </span>
             )}
           </div>
+          </div>
         </div>
         <StatusBadge
           status={order.status}
-          onClick={allowStatusChange ? () => onStatusChange(order) : undefined}
+          onClick={(!selectionMode && allowStatusChange) ? () => onStatusChange(order) : undefined}
         />
       </div>
 
@@ -263,6 +286,51 @@ function OrderCard({
   )
 }
 
+function DeliveryPersonPicker({
+  persons,
+  onSelect,
+  onClose,
+}: {
+  persons: DeliveryPersonResponse[]
+  onSelect: (dp: DeliveryPersonResponse) => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg bg-white rounded-2xl p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-semibold text-navy">Assign Delivery Person</p>
+          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
+            <X size={18} className="text-gray-500" />
+          </button>
+        </div>
+        {persons.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">No delivery persons available</p>
+        ) : (
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {persons.map((dp) => (
+              <button
+                key={dp.id}
+                onClick={() => onSelect(dp)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-100 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
+              >
+                <Bike size={16} className="text-navy shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">{dp.name}</p>
+                  <p className="text-xs text-gray-400">{dp.phone}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 interface TabState {
   orders: Order[]
   page: number
@@ -287,6 +355,10 @@ export default function OrderList() {
   const [pickerOrder, setPickerOrder] = useState<Order | null>(null)
   const [locationFilter, setLocationFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [deliveryPersons, setDeliveryPersons] = useState<DeliveryPersonResponse[]>([])
+  const [dpPickerOpen, setDpPickerOpen] = useState(false)
 
   function setSource(src: DataSource, updater: (prev: TabState) => TabState) {
     if (src === 'current') setCurrent(updater)
@@ -320,6 +392,7 @@ export default function OrderList() {
 
   function handleTabSwitch(tab: StatusTab) {
     setActiveTab(tab)
+    setLocationFilter('')
     const src = dataSource(tab)
     const state = src === 'current' ? current : others
     if (!state.initialLoaded) loadPage(src, 0)
@@ -372,15 +445,66 @@ export default function OrderList() {
     )
   }
 
+  function toggleSelection(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function exitSelectionMode() {
+    setSelectionMode(false)
+    setSelectedIds(new Set())
+  }
+
+  async function handleOpenDpPicker() {
+    if (deliveryPersons.length === 0) {
+      const data = await run(() => sharedApi.getDeliveryPersons())
+      if (data) setDeliveryPersons(data)
+    }
+    setDpPickerOpen(true)
+  }
+
+  function handleDpSelect(dp: DeliveryPersonResponse) {
+    setDpPickerOpen(false)
+    const orderIds = Array.from(selectedIds)
+    showConfirm(
+      'Assign Delivery Person',
+      `Assign ${dp.name} to ${orderIds.length} order${orderIds.length !== 1 ? 's' : ''}?`,
+      async () => {
+        const result = await run(() => sharedApi.assignDeliveryPerson(orderIds, dp.id!))
+        if (result !== null) {
+          exitSelectionMode()
+          handleRefresh()
+        }
+      },
+      'Assign',
+    )
+  }
+
   const src = dataSource(activeTab)
   const tabState = src === 'current' ? current : others
+
+  // Build location options from all orders in the current data source (no status filter)
+  // This guarantees option values match o.location_id exactly, regardless of locationMap IDs
+  const availableLocations = useMemo(() => {
+    const seen = new Map<number, string>()
+    tabState.orders.forEach((o) => {
+      if (o.location_id != null && o.location_id !== 0) {
+        seen.set(o.location_id, locationMap[o.location_id] ?? `Location ${o.location_id}`)
+      }
+    })
+    return Array.from(seen.entries()).sort((a, b) => a[1].localeCompare(b[1]))
+  }, [tabState.orders, locationMap])
+
   const visibleOrders = (() => {
     let orders = tabState.orders
     if (activeTab !== 'others') {
       orders = orders.filter((o) => Number(o.status) === Number(activeTab))
     }
     if (locationFilter) {
-      orders = orders.filter((o) => o.location_id != null && String(o.location_id) === locationFilter)
+      orders = orders.filter((o) => o.location_id != null && Number(o.location_id) === Number(locationFilter))
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
@@ -403,13 +527,23 @@ export default function OrderList() {
       <Toolbar
         title="Orders"
         action={
-          <button
-            onClick={handleRefresh}
-            className="p-1.5 rounded hover:bg-white/10"
-            aria-label="Refresh"
-          >
-            <RefreshCw size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            {activeTab === 1 && (
+              <button
+                onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+                className="p-1.5 rounded hover:bg-white/10 text-xs font-semibold tracking-wide"
+              >
+                {selectionMode ? 'Cancel' : 'Select'}
+              </button>
+            )}
+            <button
+              onClick={handleRefresh}
+              className="p-1.5 rounded hover:bg-white/10"
+              aria-label="Refresh"
+            >
+              <RefreshCw size={18} />
+            </button>
+          </div>
         }
       />
 
@@ -441,15 +575,15 @@ export default function OrderList() {
               className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white outline-none focus:border-navy"
             />
           </div>
-          {Object.keys(locationMap).length > 0 && (
+          {availableLocations.length > 0 && (
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
               className="text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white outline-none focus:border-navy shrink-0"
             >
               <option value="">All Locations</option>
-              {Object.entries(locationMap).map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
+              {availableLocations.map(([id, name]) => (
+                <option key={id} value={String(id)}>{name}</option>
               ))}
             </select>
           )}
@@ -467,6 +601,9 @@ export default function OrderList() {
                 order={order}
                 allowStatusChange={activeTab !== 'others'}
                 onStatusChange={setPickerOrder}
+                selectionMode={selectionMode}
+                selected={order.id != null && selectedIds.has(order.id)}
+                onToggleSelect={toggleSelection}
               />
             ))}
 
@@ -487,6 +624,33 @@ export default function OrderList() {
           order={pickerOrder}
           onSelect={(s) => handleStatusSelect(pickerOrder, s)}
           onClose={() => setPickerOrder(null)}
+        />
+      )}
+
+      {/* Selection bottom bar */}
+      {selectionMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t shadow-lg px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-gray-600">
+            {selectedIds.size > 0
+              ? `${selectedIds.size} order${selectedIds.size !== 1 ? 's' : ''} selected`
+              : 'Tap CREATED orders to select'}
+          </p>
+          <button
+            onClick={handleOpenDpPicker}
+            disabled={selectedIds.size === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-navy text-white text-sm font-semibold disabled:opacity-40"
+          >
+            <Bike size={15} />
+            Assign DP
+          </button>
+        </div>
+      )}
+
+      {dpPickerOpen && (
+        <DeliveryPersonPicker
+          persons={deliveryPersons}
+          onSelect={handleDpSelect}
+          onClose={() => setDpPickerOpen(false)}
         />
       )}
     </div>

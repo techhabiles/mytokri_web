@@ -71,6 +71,31 @@ export const sharedApi = {
     );
   },
 
+  assignDeliveryLocation(locationId: number, deliveryPersonId: number) {
+    return callApi<unknown>(
+      apiClient.post<ApiResponse<unknown>>(
+        `shared/assign_delivery_location/${locationId}/${deliveryPersonId}`,
+      ),
+    );
+  },
+
+  removeDeliveryLocation(locationId: number, deliveryPersonId: number) {
+    return callApi<unknown>(
+      apiClient.post<ApiResponse<unknown>>(
+        `shared/remove_delivery_location/${locationId}/${deliveryPersonId}`,
+      ),
+    );
+  },
+
+  assignDeliveryPerson(orderIds: number[], deliveryPersonId: number) {
+    return callApi<unknown>(
+      apiClient.post<ApiResponse<unknown>>('shared/assign_dp', {
+        order_ids: orderIds,
+        delivery_person_id: deliveryPersonId,
+      }),
+    );
+  },
+
   updateOrderStatus(orderId: number, status: number) {
     return callApi<unknown>(
       apiClient.post<ApiResponse<unknown>>("shared/update_order_status", {
